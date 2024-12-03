@@ -1,0 +1,6 @@
+django
+django-admin
+psycopg[binary]
+google-cloud-pubsub
+protobuf
+grpcio

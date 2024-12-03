@@ -1,0 +1,34 @@
+# We need to teach Rust/Bazel how to build OpenSSL from source
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "openssl",
+    build_file = "//third-party/openssl:openssl.BUILD",
+    integrity = "sha256-4V3agv4v6BOdwqwho21MoB1TE8dfmfRsTooncJtylL8=",
+    strip_prefix = "openssl-3.4.0",
+    urls = ["https://github.com/openssl/openssl/releases/download/openssl-3.4.0/openssl-3.4.0.tar.gz"],
+)
+
+_openssl_repo = "@@_main~_repo_rules~openssl"
+
+crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
+crate.from_cargo(
+    name = "crates.io",
+    cargo_lockfile = "//third-party/rust:Cargo.lock",
+    manifests = ["//third-party/rust:Cargo.toml"],
+    generate_binaries = True,
+)
+crate.annotation(
+    build_script_data = [
+        "{}//:gen_dir".format(_openssl_repo),
+    ],
+    build_script_env = {
+        "OPENSSL_NO_VENDOR": "1",
+        "OPENSSL_LIB_DIR": "$(location {}//:gen_dir)/lib64".format(_openssl_repo),
+        "OPENSSL_INCLUDE_DIR": "$(location {}//:gen_dir)/include".format(_openssl_repo),
+        "OPENSSL_STATIC": "1",
+    },
+    crate = "openssl-sys",
+)
+use_repo(crate, "crates.io")

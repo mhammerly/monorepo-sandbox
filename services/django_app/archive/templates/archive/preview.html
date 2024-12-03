@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <script>
+window.onload = function() {
+    iframe = document.getElementById("my_iframe")
+    unparsed = `{{ preview_html }}`
+    parser = new DOMParser()
+    first_parser_pass = parser.parseFromString(unparsed, "text/html").body.childNodes[0]
+    parsed = parser.parseFromString(first_parser_pass.data, "text/html")
+    console.log(parsed)
+    iframe.appendChild(parsed.body)
+}
+        </script>
+
+    </head>
+    <body>
+        <div id="header">
+            <h4 class="title">Archive Preview</h4>
+            <form action="{% url 'create' %}" method="post">
+            {% csrf_token %}
+            <fieldset>
+                <input name="unquoted_uri" type="hidden" value="{{ unquoted_uri }}" />
+            </fieldset>
+            <input type="submit" value="Save">
+            </form>
+
+        </div>
+        <iframe id="my_iframe" sandbox="" security="restricted">
+        </iframe>
+    </body>
+</html>

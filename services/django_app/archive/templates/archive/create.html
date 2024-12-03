@@ -1,0 +1,27 @@
+<html>
+    <head>
+        <script>
+function goToPreview() {
+    urlToPreview = document.getElementById("url").value
+    encodedUrl = encodeURIComponent(urlToPreview)
+    url = "//" + window.location.host + "/archive/preview/" + encodedUrl
+    
+    console.log(url, urlToPreview)
+
+    window.location.href = url
+}
+        </script>
+    </head>
+    <body>
+        <form action="{% url 'create' %}" method="post">
+        {% csrf_token %}
+        <fieldset>
+            <label for="url">URL:</label>
+            <input id="url" name="url" type="text" />
+        </fieldset>
+        <input id="go" type="button" value="Preview" onclick="goToPreview()"/>
+        <input type="submit" value="Save">
+        </form>
+        <p>Click "Preview" to see what the archived page looks like. If it looks good, navigate back and click "Save".</p>
+    </body>
+</html>

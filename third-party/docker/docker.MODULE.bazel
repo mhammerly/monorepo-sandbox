@@ -1,0 +1,37 @@
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+oci.pull(
+    name = "python-slim",
+    image = "docker.io/library/python:3.12-slim-bookworm",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+)
+use_repo(oci, "python-slim", "python-slim_linux_amd64", "python-slim_linux_arm64_v8")
+oci.pull(
+    name = "postgres",
+    image = "docker.io/library/postgres:17.2-alpine",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+)
+use_repo(oci, "postgres", "postgres_linux_amd64", "postgres_linux_arm64_v8")
+oci.pull(
+    name = "gcp-emulator",
+    image = "gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+)
+use_repo(oci, "gcp-emulator", "gcp-emulator_linux_amd64", "gcp-emulator_linux_arm64_v8")
+oci.pull(
+    name = "distroless_cc",
+    image = "gcr.io/distroless/cc:latest",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+)
+use_repo(oci, "distroless_cc", "distroless_cc_linux_amd64", "distroless_cc_linux_arm64_v8")

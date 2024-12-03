@@ -1,0 +1,64 @@
+bazel_dep(name = "rules_rust", version = "0.54.1")
+bazel_dep(name = "rules_python", version = "1.0.0-rc2")
+bazel_dep(name = "toolchains_llvm", version = "1.2.0")
+bazel_dep(name = "rules_foreign_cc", version = "0.12.0")
+bazel_dep(name = "rules_pkg", version = "1.0.1")
+bazel_dep(name = "rules_oci", version = "2.0.1")
+bazel_dep(name = "rules_distroless", version = "0.3.8")
+bazel_dep(name = "grpc", version = "1.66.0.bcr.3")
+bazel_dep(name = "protobuf", version = "29.0")
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# # # # # # # #
+# # Python Setup
+# # # # # # # #
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    configure_coverage_tool = True,
+    is_default = True,
+    python_version = "3.12",
+)
+
+include("//third-party/python:pypi.MODULE.bazel")
+
+# # # # # # # #
+# # Rust Setup
+# # # # # # # #
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = "2021",
+    extra_target_triples = [
+        "aarch64-unknown-linux-gnu",
+        "x86_64-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+    ],
+    versions = ["1.82.0"],
+)
+use_repo(rust, "rust_toolchains")
+
+register_toolchains("@rust_toolchains//:all")
+register_toolchains("//tools/prost:prost_toolchain")
+
+include("//third-party/rust:cratesio.MODULE.bazel")
+
+# # # # # # # #
+# # PyO3 Setup
+# # # # # # # #
+
+# This currently lives in `/WORKSPACE` until `rules_pyo3` supports bzlmod
+
+# # # # # # # #
+# # Cross-Compilation Setup
+# # # # # # # #
+include("//tools:llvm.MODULE.bazel")
+
+# # # # # # # #
+# # Docker Setup
+# # # # # # # #
+include("//third-party/docker:docker.MODULE.bazel")
+
+# # # # # # # #
+# # Debian Setup
+# # # # # # # #
+include("//third-party/deb:apt.MODULE.bazel")

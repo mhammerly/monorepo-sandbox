@@ -1,0 +1,84 @@
+what should i make my demo projecto
+
+maybe a really dumb link archiver
+
+django app
+- model for saved page
+- form for creating an archive
+- calls a pyo3 module to "test" an archive before saving
+- saving publishes a message to a pub/sub queue
+- viewing a record shows a header and then prints the page content in an iframe
+  - does gRPC to StorageService to get content
+
+cloud run function
+- POST with url to the cloud run function publishes a message to a pub/sub queue
+
+rust ingest service
+- reads from pub/sub queue
+- gRPC to python service to see if url has already been saved
+- uses web-archive crate + embed_resources to make single-page html string
+- post message when finished
+
+python storage
+- gRPC service for saving, counting, fetching
+- saves in django model
+
+pyo3 module
+- shared rust library that takes a string, does the webarchive, and returns a string
+- ingest service depends on it
+- pyo3 bindings also depend on it and expose to python
+- the tester page calls the pyo3 module
+
+protobufs
+- pub/sub message format for IngestRequest
+- gRPC types for SaveRequest, ExistsRequest, FetchRequest
+
+docker images
+- python django deployment
+- rust ingest service
+- python storage service
+- postgres
+- pub/sub emulator
+
+repo ergonomics
+- mypy
+- rust-analyzer https://bazelbuild.github.io/rules_rust/rust_analyzer.html ? https://github.com/bazelbuild/rules_rust/issues/2755
+- lints
+- hotreload
+
+deployment/admin/infra stuff
+- ???
+
+code coverage
+- rust
+- python
+- pyo3
+
+ci jobs, test selection
+- file_label=$(bazel query /path/to/file.py) # get source file bazel label
+- bazel query "attr('srcs', $file_label, ${file_label//:*I/}/...)" # get targets that include it as a src (assuming target is in same dir or child dir, not parent dir)
+- bazel query "rdeps(//..., attr('srcs', $file_label, ${file_label//:*/}/...), 3)" # get reverse deps for those packages, 3 layers deep
+- bazel query "kind(test, rdeps(//..., attr('srcs', $file_label, ${file_label//:*/}/...), 3))" # get reverse dependencies that are tests, 3 layers deep
+
+codecov config
+- i think the state of the art is CFFs. have a CI job with a matrix of (target_regex, flag). each instance will run the above bazel query, filter to targets that match its regex, and generate/upload coverage for them with the flag attached
+- in a monorepo, all-up coverage is not useful. in addition to the flag setup described above, you also need to define components with basically copies of your CI target regexes
+- codeowners-based components... (subprojects)?
+  - codecov can look for a special `# CODECOV: subproject=foo` comment in a CODEOWNERS file to indicate the next pattern in the file should be added to a subproject called foo (and foo should be created if this is the first)
+  - we can maybe also support configuring the subproject checks/thresholds in the codeowners file... kind of obnoxious but whatever
+  - repo can be configured not to bother with all-up coverage. display instead a list of subprojects
+  - subprojects do not have CFF. you tell us which commits are relevant to your subproject, and we expect you to send new versions of all relevant uploads
+  - when viewing a subproject's commit history:
+    - commits for the subproject are shown in full color. project coverage and patch coverage are shown
+    - other commits are grayed out. if they have project or patch coverage for the subproject it can be shown, but deemphasized
+  - coverage over time is filtered on commits for this subproject
+  - relies on filtered totals being saved or super fast to compute
+- alt codeowners-based components... (subprojects)?
+  - mostly the above
+  - you do not mark which commits/uploads are relevant to your subproject. we attempt to infer based on touched files matching the patterns
+  - that way, you can create a new subproject by modifying codeowners and we will show you the history as if it always existed
+  - this is probably slow; would need to store the list of modified files for every commit and do the matches to decide whether it's "part of" the subproject
+  - maybe we establish we only show 90d history and when we detect subprojects have changed we schedule a backfill task
+  - relies on filtered totals being saved or super fast to compute
+- this is a huge and profound change to usage of the product
+- maybe i can build this for a new "fuzz coverage" surface and then, if it works well, allow projects to route regular coverage through the same experience

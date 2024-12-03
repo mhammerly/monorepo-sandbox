@@ -1,0 +1,14 @@
+bazel-monorepo-bazel
+bazel-bin
+bazel-out
+bazel-testlogs
+MODULE.bazel.lock
+.git/
+.*.sw*
+*.pyc
+
+.env.local
+_config.bzl
+.bazelrc.local
+third-party/rust/target/
+.venv/

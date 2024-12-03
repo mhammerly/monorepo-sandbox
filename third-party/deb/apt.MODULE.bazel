@@ -1,0 +1,7 @@
+apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
+apt.install(
+    name = "bookworm",
+    lock = "//third-party/deb:bookworm.lock.json",
+    manifest = "//third-party/deb:bookworm.yaml",
+)
+use_repo(apt, "bookworm")

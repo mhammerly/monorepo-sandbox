@@ -1,0 +1,87 @@
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
+
+LLVM_VERSIONS = {
+    "": "19.1.0",
+}
+
+llvm.toolchain(
+    name = "llvm_toolchain",
+    cxx_standard = {"": "c++23"},
+    llvm_versions = LLVM_VERSIONS,
+)
+use_repo(llvm, "llvm_toolchain", "llvm_toolchain_llvm")
+
+register_toolchains(
+    "@llvm_toolchain//:all",
+    dev_dependency = True,
+)
+
+# https://commondatastorage.googleapis.com/chrome-linux-sysroot/
+# At time of writing we use bookworm but that is not available and bullseye
+# should be compatible.
+http_archive(
+    name = "x86_64_linux_sysroot",
+    build_file = "//tools/platforms:sysroots.BUILD",
+    sha256 = "5df5be9357b425cdd70d92d4697d07e7d55d7a923f037c22dc80a78e85842d2c",
+    urls = ["https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/4f611ec025be98214164d4bf9fbe8843f58533f7/debian_bullseye_amd64_sysroot.tar.xz"],
+)
+
+# https://commondatastorage.googleapis.com/chrome-linux-sysroot/
+# At time of writing we use bookworm but that is not available and bullseye
+# should be compatible.
+http_archive(
+    name = "aarch64_linux_sysroot",
+    build_file = "//tools/platforms:sysroots.BUILD",
+    sha256 = "d303cf3faf7804c9dd24c9b6b167d0345d41d7fe4bfb7d34add3ab342f6a236c",
+    urls = ["https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/906cc7c6bf47d4bd969a3221fc0602c6b3153caa/debian_bullseye_arm64_sysroot.tar.xz"],
+)
+
+llvm.toolchain(
+    name = "llvm_cross_toolchain_linux_aarch64",
+    cxx_standard = {"": "c++23"},
+    llvm_versions = LLVM_VERSIONS,
+    stdlib = {"": "stdc++"},
+)
+
+# Reuse existing LLVM distribution
+llvm.toolchain_root(
+    name = "llvm_cross_toolchain_linux_aarch64",
+    label = "@llvm_toolchain_llvm//:BUILD",
+)
+llvm.sysroot(
+    name = "llvm_cross_toolchain_linux_aarch64",
+    label = "@aarch64_linux_sysroot//:sysroot",
+    targets = ["linux-aarch64"],
+)
+use_repo(llvm, "llvm_cross_toolchain_linux_aarch64")
+
+register_toolchains(
+    "@llvm_cross_toolchain_linux_aarch64//:all",
+    dev_dependency = True,
+)
+
+llvm.toolchain(
+    name = "llvm_cross_toolchain_linux_x86_64",
+    cxx_standard = {"": "c++23"},
+    llvm_versions = LLVM_VERSIONS,
+    stdlib = {"": "stdc++"},
+)
+
+# Reuse existing LLVM distribution
+llvm.toolchain_root(
+    name = "llvm_cross_toolchain_linux_x86_64",
+    label = "@llvm_toolchain_llvm//:BUILD",
+)
+llvm.sysroot(
+    name = "llvm_cross_toolchain_linux_x86_64",
+    label = "@x86_64_linux_sysroot//:sysroot",
+    targets = ["linux-x86_64"],
+)
+use_repo(llvm, "llvm_cross_toolchain_linux_x86_64")
+
+register_toolchains(
+    "@llvm_cross_toolchain_linux_x86_64//:all",
+    dev_dependency = True,
+)

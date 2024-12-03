@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message IngestRequest {
+  string url = 1;
+}

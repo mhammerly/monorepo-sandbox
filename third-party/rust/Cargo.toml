@@ -1,0 +1,22 @@
+[workspace]
+[package]
+name = "third-party"
+version = "0.0.0"
+edition = "2021"
+publish = false
+rust-version = "1.77"
+
+[dependencies]
+web-archive = { version = "0.2.0", features = ["blocking"] }
+ferris-says = "0.3.2"
+pyo3 = { version = "0.23.1", features = ["extension-module", "abi3", "abi3-py312"] }
+google-cloud-pubsub = "0.30.0"
+google-cloud-gax = "0.19.2"
+google-cloud-googleapis = "0.16.0"
+tokio = { version = "1.41.1", features = ["full"] }
+tokio-util = "0.7.12"
+prost = { version = "0.13", default-features = false, features = ["prost-derive"] }
+prost-types = { version = "0.13", default-features = false }
+protoc-gen-prost = "0.4"
+protoc-gen-tonic = "0.4"
+tonic = "0.12.3"

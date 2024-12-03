@@ -1,0 +1,65 @@
+version: "3.0"
+
+services:
+  django:
+    image: ${CONTAINER_REPO}/django:latest
+    platform: linux/amd64 # TODO: fix multiplatform for django
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GCP_TOPIC_ID=${GCP_TOPIC_ID}
+      - GCP_SCHEMA_ID=${GCP_SCHEMA_ID}
+      - GCP_SUBSCRIPTION_ID=${GCP_SUBSCRIPTION_ID}
+    ports:
+      - '8000:8000'
+    depends_on:
+      - postgres
+      - pubsub
+
+  ingest:
+    image: ${CONTAINER_REPO}/ingest:latest
+    environment:
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GCP_TOPIC_ID=${GCP_TOPIC_ID}
+      - GCP_SCHEMA_ID=${GCP_SCHEMA_ID}
+      - GCP_SUBSCRIPTION_ID=${GCP_SUBSCRIPTION_ID}
+    depends_on:
+      - pubsub
+
+  storage:
+    image: ${CONTAINER_REPO}/storage:latest
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=django_app.settings
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GCP_TOPIC_ID=${GCP_TOPIC_ID}
+      - GCP_SCHEMA_ID=${GCP_SCHEMA_ID}
+      - GCP_SUBSCRIPTION_ID=${GCP_SUBSCRIPTION_ID}
+    depends_on:
+      - pubsub
+
+  postgres:
+    hostname: postgres
+    image: docker.io/library/postgres:17.2-alpine
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    expose:
+      - 5432
+    ports:
+      - '5432:5432'
+
+  pubsub:
+    hostname: pubsub
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    entrypoint: ["/bin/sh", "-c", "gcloud beta emulators pubsub start --project ${GCP_PROJECT:-a-b-1234-i7} --host-port=0.0.0.0:8085"]
+
+volumes:
+    db_data:

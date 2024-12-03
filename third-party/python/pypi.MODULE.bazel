@@ -1,0 +1,65 @@
+# Try to match the platform names from tools/platforms/defs.bzl
+PLATFORM_FLAGS = {
+    "linux_amd64": [
+        "--platform",
+        "linux-x86_64",
+        "--platform",
+        "manylinux2014_x86_64",
+        "--platform",
+        "manylinux_2_17_x86_64",
+    ],
+    "linux_aarch64": [
+        "--platform",
+        "linux-aarch64",
+        "--platform",
+        "manylinux2014_aarch64",
+        "--platform",
+        "manylinux_2_17_x86_64",
+    ],
+    "macos_amd64": [
+        "--platform",
+        "macos-x86_64",
+        "--platform",
+        "macosx-14.6-x86_64",
+    ],
+    "macos_aarch64": [
+        "--platform",
+        "macos-aarch64",
+        "--platform",
+        "macosx-14.6-arm64",
+    ],
+}
+
+# `rules_python` needs help distinguishing between the host platform and target
+# platform. Each target platform gets its own separate PyPI repository with the
+# appropriate platform set and we use aliases with `select()` to paper over it.
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    download_only = True, # Ensure we get a wheel for the right target platform
+    hub_name = "pypi-linux_amd64",
+    python_version = "3.12",
+    requirements_lock = "//third-party/python:requirements.txt",
+    extra_pip_args = PLATFORM_FLAGS["linux_amd64"],
+)
+pip.parse(
+    download_only = True, # Ensure we get a wheel for the right target platform
+    hub_name = "pypi-linux_aarch64",
+    python_version = "3.12",
+    requirements_lock = "//third-party/python:requirements.txt",
+    extra_pip_args = PLATFORM_FLAGS["linux_aarch64"],
+)
+pip.parse(
+    download_only = True, # Ensure we get a wheel for the right target platform
+    hub_name = "pypi-macos_amd64",
+    python_version = "3.12",
+    requirements_lock = "//third-party/python:requirements.txt",
+    extra_pip_args = PLATFORM_FLAGS["macos_amd64"],
+)
+pip.parse(
+    download_only = True, # Ensure we get a wheel for the right target platform
+    hub_name = "pypi-macos_aarch64",
+    python_version = "3.12",
+    requirements_lock = "//third-party/python:requirements.txt",
+    extra_pip_args = PLATFORM_FLAGS["macos_aarch64"],
+)
+use_repo(pip, "pypi-linux_amd64", "pypi-linux_aarch64", "pypi-macos_amd64", "pypi-macos_aarch64")

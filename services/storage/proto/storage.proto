@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package com.mhammerly.storage;
+
+service StorageService {
+  rpc SaveArchive (SaveRequest) returns (SaveResponse) {}
+  rpc CheckExists (ExistsRequest) returns (ExistsResponse) {}
+  rpc LoadArchive (LoadRequest) returns (LoadResponse) {}
+}
+
+message SaveRequest {
+  string url = 1;
+  string content = 2;
+}
+
+message SaveResponse {
+  uint64 id = 1;
+  google.protobuf.Timestamp created_at = 2;
+}
+
+message ExistsRequest {
+  string url = 1;
+}
+
+message ExistsResponse {
+  repeated uint64 ids = 1;
+}
+
+message LoadRequest {
+  uint64 id = 1;
+}
+
+message LoadResponse {
+  string content = 1;
+  google.protobuf.Timestamp created_at = 2;
+}
